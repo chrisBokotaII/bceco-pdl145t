@@ -3,7 +3,8 @@ import { createApiApp } from '../server';
 
 /**
  * Vercel serverless entry — mounts the Express demo API under /api/*.
- * The Vite SPA is served from `dist` via the Vite framework preset.
+ * api/package.json forces CommonJS so @vercel/node bundles the import graph
+ * (native ESM leaves extensionless ../server unresolved at runtime).
  */
 const app = createApiApp();
 
