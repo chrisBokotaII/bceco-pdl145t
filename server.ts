@@ -3,17 +3,17 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import express, { type Express, type NextFunction, type Request, type Response } from 'express';
-import { createDemoDataset, type DemoDataset } from './src/data/demoSeed.ts';
+import { createDemoDataset, type DemoDataset } from './src/data/demoSeed';
 import {
   calculateTepTefGap,
   detectPotentialDuplicates,
   validateFieldReportForSubmission,
-} from './src/domain/businessRules.ts';
-import { computePeriodKey, generateUniqueId } from './src/domain/formatters.ts';
+} from './src/domain/businessRules';
+import { computePeriodKey, generateUniqueId } from './src/domain/formatters';
 import {
   buildConsolidatedReportModel,
   type ReportingFilterParams,
-} from './src/domain/reportingEngine.ts';
+} from './src/domain/reportingEngine';
 import {
   buildConsolidatedCsvBuffer,
   buildConsolidatedExcelBuffer,
@@ -22,7 +22,7 @@ import {
   buildSingleReportPdfBuffer,
   type BuiltExportArtifact,
   type CsvExportVariant,
-} from './src/services/export/reportExporter.ts';
+} from './src/services/export/reportExporter';
 import type {
   AgentAssignment,
   AuditLog,
@@ -32,7 +32,7 @@ import type {
   Project,
   SyncLog,
   UserProfile,
-} from './src/types/domain.ts';
+} from './src/types/domain';
 
 const PORT = 3000;
 const STORE_PATH = '/tmp/bceco-pdl145t-demo-store-v2.json';
