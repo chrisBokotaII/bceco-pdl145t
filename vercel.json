@@ -8,9 +8,8 @@
     { "source": "/api/(.*)", "destination": "/api" }
   ],
   "functions": {
-    "api/index.ts": {
-      "maxDuration": 60,
-      "includeFiles": "{src/**,server.ts}"
+    "api/index.cjs": {
+      "maxDuration": 60
     }
   }
 }
