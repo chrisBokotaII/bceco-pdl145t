@@ -2,7 +2,6 @@ node_modules/
 build/
 dist/
 dev-dist/
-api/index.js
 api/index.cjs
 coverage/
 .DS_Store

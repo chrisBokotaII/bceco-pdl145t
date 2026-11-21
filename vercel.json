@@ -6,10 +6,5 @@
   "installCommand": "npm install",
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api" }
-  ],
-  "functions": {
-    "api/index.cjs": {
-      "maxDuration": 60
-    }
-  }
+  ]
 }
