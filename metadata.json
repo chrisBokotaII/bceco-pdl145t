@@ -1,0 +1,6 @@
+{
+  "name": "Assistant de Fiche Terrain — BCECO / PDL-145T",
+  "description": "Plateforme opérationnelle de collecte terrain hors ligne, de suivi-évaluation des ouvrages et de reporting consolidé pour le programme BCECO / PDL-145T en République Démocratique du Congo.",
+  "requestFramePermissions": ["geolocation"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,123 @@
+/*
+ * BCECO / PDL-145T design tokens
+ * Light values preserve the existing institutional UI.
+ * Dark values follow the product palette (#0B1120 / #151E2E / …).
+ */
+
+:root {
+  /* Surfaces */
+  --surface-page: #f8fafc;
+  --surface-card: #ffffff;
+  --surface-muted: #f1f5f9;
+  --surface-elevated: #ffffff;
+  --surface-sidebar: #0f2544;
+  --surface-nav: #ffffff;
+  --surface-overlay: rgb(15 23 42 / 0.5);
+  --surface-input: #ffffff;
+
+  /* Brand / chrome (unchanged in both themes for institutional identity) */
+  --brand-navy: #0f2544;
+  --brand-navy-hover: #16325b;
+  --brand-primary: #1d4ed8;
+  --brand-primary-soft: #dbeafe;
+
+  /* Text */
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #64748b;
+  --text-inverse: #ffffff;
+  --text-on-brand: #e2e8f0;
+  --text-link: #1d4ed8;
+
+  /* Borders */
+  --border-subtle: #e2e8f0;
+  --border-strong: #cbd5e1;
+  --border-focus: #1d4ed8;
+
+  /* Status (readable on light) */
+  --status-success: #047857;
+  --status-success-bg: #ecfdf5;
+  --status-success-border: #a7f3d0;
+  --status-warning: #b45309;
+  --status-warning-bg: #fffbeb;
+  --status-warning-border: #fcd34d;
+  --status-error: #b91c1c;
+  --status-error-bg: #fef2f2;
+  --status-error-border: #fecaca;
+  --status-info: #1d4ed8;
+  --status-info-bg: #eff6ff;
+  --status-info-border: #bfdbfe;
+
+  /* Charts */
+  --chart-grid: #e2e8f0;
+  --chart-tick: #334155;
+  --chart-muted: #475569;
+  --chart-tooltip-bg: #ffffff;
+  --chart-tooltip-border: #cbd5e1;
+  --chart-tooltip-text: #0f172a;
+  --chart-navy: #0f2544;
+  --chart-blue: #1d4ed8;
+  --chart-success: #15803d;
+  --chart-warning: #d97706;
+  --chart-error: #b91c1c;
+
+  /* Motion */
+  --theme-transition: background-color 160ms ease, color 160ms ease, border-color 160ms ease,
+    box-shadow 160ms ease, fill 160ms ease, stroke 160ms ease;
+
+  color-scheme: light;
+}
+
+html.dark {
+  --surface-page: #0b1120;
+  --surface-card: #151e2e;
+  --surface-muted: #1a2436;
+  --surface-elevated: #1c2738;
+  --surface-sidebar: #101827;
+  --surface-nav: #101827;
+  --surface-overlay: rgb(0 0 0 / 0.6);
+  --surface-input: #1a2436;
+
+  --brand-navy: #101827;
+  --brand-navy-hover: #1a2740;
+  --brand-primary: #3b82f6;
+  --brand-primary-soft: rgb(59 130 246 / 0.18);
+
+  --text-primary: #f1f5f9;
+  --text-secondary: #a0aec0;
+  --text-muted: #94a3b8;
+  --text-inverse: #f8fafc;
+  --text-on-brand: #e2e8f0;
+  --text-link: #60a5fa;
+
+  --border-subtle: #293548;
+  --border-strong: #3a4a63;
+  --border-focus: #3b82f6;
+
+  --status-success: #34d399;
+  --status-success-bg: rgb(6 78 59 / 0.35);
+  --status-success-border: rgb(16 185 129 / 0.45);
+  --status-warning: #fbbf24;
+  --status-warning-bg: rgb(120 53 15 / 0.35);
+  --status-warning-border: rgb(217 119 6 / 0.45);
+  --status-error: #fca5a5;
+  --status-error-bg: rgb(127 29 29 / 0.35);
+  --status-error-border: rgb(248 113 113 / 0.45);
+  --status-info: #93c5fd;
+  --status-info-bg: rgb(30 64 175 / 0.3);
+  --status-info-border: rgb(59 130 246 / 0.45);
+
+  --chart-grid: #293548;
+  --chart-tick: #cbd5e1;
+  --chart-muted: #a0aec0;
+  --chart-tooltip-bg: #151e2e;
+  --chart-tooltip-border: #293548;
+  --chart-tooltip-text: #f1f5f9;
+  --chart-navy: #93c5fd;
+  --chart-blue: #3b82f6;
+  --chart-success: #34d399;
+  --chart-warning: #fbbf24;
+  --chart-error: #f87171;
+
+  color-scheme: dark;
+}

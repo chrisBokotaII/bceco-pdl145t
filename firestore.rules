@@ -1,0 +1,507 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global safety net: default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // -------------------------------------------------------------------------
+    // Hardened Global Primitives
+    // -------------------------------------------------------------------------
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 2 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isBootstrapCoordinator() {
+      return isVerifiedUser() &&
+        request.auth.token.email == 'el305330@students.cavendish.ac.ug';
+    }
+
+    function isCoordinator() {
+      return isBootstrapCoordinator() ||
+        (isVerifiedUser() && exists(/databases/$(database)/documents/coordinators/$(request.auth.uid)));
+    }
+
+    function isActiveUser() {
+      return exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isActive == true;
+    }
+
+    function isValidDateString(val) {
+      return val is string && val.size() <= 40;
+    }
+
+    function isValidPercent(val) {
+      return val is number && val >= 0 && val <= 100;
+    }
+
+    // -------------------------------------------------------------------------
+    // Entity Validation Blueprints (synchronized with firebase-blueprint.json)
+    // -------------------------------------------------------------------------
+    function isValidUserProfile(data) {
+      return data.keys().hasAll(['id', 'email', 'fullName', 'role', 'isActive', 'isDemoData', 'createdAt', 'updatedAt']) &&
+        data.keys().hasOnly(['id', 'email', 'fullName', 'role', 'phone', 'functionTitle', 'provinceScope', 'isActive', 'isDemoData', 'createdAt', 'updatedAt']) &&
+        isValidId(data.id) &&
+        data.email is string && data.email.size() >= 3 && data.email.size() <= 180 &&
+        data.fullName is string && data.fullName.size() >= 2 && data.fullName.size() <= 140 &&
+        data.role in ['COORDINATEUR', 'AGENT_TERRAIN'] &&
+        (!('phone' in data) || (data.phone is string && data.phone.size() <= 40)) &&
+        (!('functionTitle' in data) || (data.functionTitle is string && data.functionTitle.size() <= 120)) &&
+        (!('provinceScope' in data) || (data.provinceScope is string && data.provinceScope.size() <= 80)) &&
+        data.isActive is bool &&
+        data.isDemoData is bool &&
+        isValidDateString(data.createdAt) &&
+        isValidDateString(data.updatedAt);
+    }
+
+    function isValidCoordinatorRole(data) {
+      return data.keys().hasAll(['uid', 'email', 'grantedAt']) &&
+        data.keys().hasOnly(['uid', 'email', 'grantedAt']) &&
+        isValidId(data.uid) &&
+        data.email is string && data.email.size() >= 3 && data.email.size() <= 180 &&
+        isValidDateString(data.grantedAt);
+    }
+
+    function isValidProject(data) {
+      return data.keys().hasAll([
+          'id', 'matrixNumber', 'contractor', 'province', 'territory',
+          'infrastructureType', 'projectName', 'contractStatus', 'currentStatus',
+          'currentTep', 'currentTef', 'assignedAgentIds', 'isDemoData', 'createdAt', 'updatedAt'
+        ]) &&
+        data.keys().hasOnly([
+          'id', 'matrixNumber', 'contractor', 'province', 'territory',
+          'infrastructureType', 'projectName', 'sectorChiefdom', 'locality',
+          'contractStatus', 'startDate', 'definitiveReceptionDeadline',
+          'referenceCoords', 'baselineStatus', 'baselineTep', 'baselineTef', 'baselineDate',
+          'currentStatus', 'latestPeriodRealization', 'latestExecutionStages',
+          'currentTep', 'currentTef', 'currentGap', 'latestConstraintsSummary',
+          'latestConstraintCategories', 'hasUnresolvedConstraints', 'hasCriticalConstraint',
+          'latestImpactsSummary', 'receptions', 'latestObservation',
+          'lastValidatedReportId', 'lastValidatedAt', 'assignedAgentIds',
+          'isDemoData', 'createdAt', 'updatedAt'
+        ]) &&
+        isValidId(data.id) &&
+        data.matrixNumber is string && data.matrixNumber.size() >= 1 && data.matrixNumber.size() <= 40 &&
+        data.contractor is string && data.contractor.size() >= 1 && data.contractor.size() <= 180 &&
+        data.province is string && data.province.size() >= 2 && data.province.size() <= 80 &&
+        data.territory is string && data.territory.size() >= 2 && data.territory.size() <= 80 &&
+        data.infrastructureType in ['ECOLE_PRIMAIRE', 'CENTRE_DE_SANTE', 'BATIMENT_ADMINISTRATIF'] &&
+        data.projectName is string && data.projectName.size() >= 2 && data.projectName.size() <= 220 &&
+        (!('sectorChiefdom' in data) || (data.sectorChiefdom is string && data.sectorChiefdom.size() <= 120)) &&
+        (!('locality' in data) || (data.locality is string && data.locality.size() <= 120)) &&
+        data.contractStatus in ['CONTRAT_ACTIF', 'CONTRAT_RESILIE', 'REATTRIBUE_ALE_PME'] &&
+        (!('startDate' in data) || (data.startDate is string && data.startDate.size() <= 20)) &&
+        (!('definitiveReceptionDeadline' in data) || (data.definitiveReceptionDeadline is string && data.definitiveReceptionDeadline.size() <= 20)) &&
+        (!('referenceCoords' in data) || data.referenceCoords is map) &&
+        (!('baselineDate' in data) || (data.baselineDate is string && data.baselineDate.size() <= 20)) &&
+        (!('baselineStatus' in data) || data.baselineStatus in ['ACHEVE', 'EN_COURS', 'A_L_ARRET', 'NON_DEMARRE']) &&
+        (!('baselineTep' in data) || isValidPercent(data.baselineTep)) &&
+        (!('baselineTef' in data) || isValidPercent(data.baselineTef)) &&
+        data.currentStatus in ['ACHEVE', 'EN_COURS', 'A_L_ARRET', 'NON_DEMARRE'] &&
+        (!('latestPeriodRealization' in data) || (data.latestPeriodRealization is string && data.latestPeriodRealization.size() <= 2000)) &&
+        (!('latestExecutionStages' in data) || (
+          data.latestExecutionStages is list &&
+          data.latestExecutionStages.size() <= 15 &&
+          (data.latestExecutionStages.size() == 0 || data.latestExecutionStages[0] is string)
+        )) &&
+        isValidPercent(data.currentTep) &&
+        isValidPercent(data.currentTef) &&
+        (!('currentGap' in data) || (data.currentGap is number && data.currentGap >= -100 && data.currentGap <= 100)) &&
+        (!('latestConstraintsSummary' in data) || (data.latestConstraintsSummary is string && data.latestConstraintsSummary.size() <= 2000)) &&
+        (!('latestConstraintCategories' in data) || (
+          data.latestConstraintCategories is list &&
+          data.latestConstraintCategories.size() <= 10 &&
+          (data.latestConstraintCategories.size() == 0 || data.latestConstraintCategories[0] is string)
+        )) &&
+        (!('hasUnresolvedConstraints' in data) || data.hasUnresolvedConstraints is bool) &&
+        (!('hasCriticalConstraint' in data) || data.hasCriticalConstraint is bool) &&
+        (!('latestImpactsSummary' in data) || (data.latestImpactsSummary is string && data.latestImpactsSummary.size() <= 2000)) &&
+        (!('receptions' in data) || data.receptions is map) &&
+        (!('latestObservation' in data) || (data.latestObservation is string && data.latestObservation.size() <= 2000)) &&
+        (!('lastValidatedReportId' in data) || isValidId(data.lastValidatedReportId)) &&
+        (!('lastValidatedAt' in data) || isValidDateString(data.lastValidatedAt)) &&
+        data.assignedAgentIds is list && data.assignedAgentIds.size() <= 20 &&
+        (data.assignedAgentIds.size() == 0 || data.assignedAgentIds[0] is string) &&
+        data.isDemoData is bool &&
+        isValidDateString(data.createdAt) &&
+        isValidDateString(data.updatedAt);
+    }
+
+    function isValidAssignment(data) {
+      return data.keys().hasAll([
+          'id', 'agentId', 'agentName', 'projectId', 'startDate',
+          'status', 'assignedBy', 'isDemoData', 'createdAt', 'updatedAt'
+        ]) &&
+        data.keys().hasOnly([
+          'id', 'agentId', 'agentName', 'projectId', 'projectMatrixNumber',
+          'projectName', 'startDate', 'endDate', 'status', 'assignedBy',
+          'assignedByName', 'notes', 'reassignedToAgentId', 'isDemoData',
+          'createdAt', 'updatedAt'
+        ]) &&
+        isValidId(data.id) &&
+        isValidId(data.agentId) &&
+        data.agentName is string && data.agentName.size() >= 2 && data.agentName.size() <= 140 &&
+        isValidId(data.projectId) &&
+        (!('projectMatrixNumber' in data) || (data.projectMatrixNumber is string && data.projectMatrixNumber.size() <= 40)) &&
+        (!('projectName' in data) || (data.projectName is string && data.projectName.size() <= 220)) &&
+        data.startDate is string && data.startDate.size() >= 4 && data.startDate.size() <= 20 &&
+        (!('endDate' in data) || data.endDate == null || (data.endDate is string && data.endDate.size() <= 20)) &&
+        data.status in ['ACTIVE', 'TERMINEE', 'REAFFECTEE'] &&
+        isValidId(data.assignedBy) &&
+        (!('assignedByName' in data) || (data.assignedByName is string && data.assignedByName.size() <= 140)) &&
+        (!('notes' in data) || (data.notes is string && data.notes.size() <= 500)) &&
+        (!('reassignedToAgentId' in data) || isValidId(data.reassignedToAgentId)) &&
+        data.isDemoData is bool &&
+        isValidDateString(data.createdAt) &&
+        isValidDateString(data.updatedAt);
+    }
+
+    function isValidFieldReport(data) {
+      return data.keys().hasAll([
+          'id', 'projectId', 'matrixNumber', 'agentId', 'agentName',
+          'status', 'syncStatus', 'version', 'periodKey', 'periodicity',
+          'collectionDate', 'currentTep', 'currentTef', 'isDemoData', 'createdAt', 'updatedAt'
+        ]) &&
+        data.keys().hasOnly([
+          'id', 'projectId', 'matrixNumber', 'agentId', 'agentName', 'assignmentId',
+          'status', 'syncStatus', 'syncConflictReason', 'clientSubmissionId', 'potentialDuplicateOf',
+          'version', 'periodKey', 'periodicity', 'collectionDate',
+          'currentTep', 'currentTef', 'identification', 'progress',
+          'constraints', 'receptions', 'signature', 'reviews', 'versionHistory',
+          'submittedAt', 'validatedAt', 'lastSyncedAt', 'isDemoData', 'createdAt', 'updatedAt'
+        ]) &&
+        isValidId(data.id) &&
+        isValidId(data.projectId) &&
+        data.matrixNumber is string && data.matrixNumber.size() >= 1 && data.matrixNumber.size() <= 40 &&
+        isValidId(data.agentId) &&
+        data.agentName is string && data.agentName.size() >= 2 && data.agentName.size() <= 140 &&
+        (!('assignmentId' in data) || isValidId(data.assignmentId)) &&
+        data.status in ['BROUILLON', 'EN_ATTENTE_SYNC', 'SOUMIS', 'EN_COURS_VERIFICATION', 'VALIDE', 'RETOURNE'] &&
+        data.syncStatus in ['LOCAL_BROUILLON', 'EN_ATTENTE_SYNC', 'SYNCHRONISE', 'CONFLIT_AFFECTATION', 'ERREUR_SYNC'] &&
+        (!('syncConflictReason' in data) || (data.syncConflictReason is string && data.syncConflictReason.size() <= 600)) &&
+        data.version is number && data.version >= 1 && data.version <= 100 &&
+        data.periodKey is string && data.periodKey.size() >= 4 && data.periodKey.size() <= 40 &&
+        data.periodicity in ['JOURNALIER', 'HEBDOMADAIRE', 'MENSUEL'] &&
+        data.collectionDate is string && data.collectionDate.size() >= 4 && data.collectionDate.size() <= 20 &&
+        isValidPercent(data.currentTep) &&
+        isValidPercent(data.currentTef) &&
+        (!('identification' in data) || data.identification is map) &&
+        (!('progress' in data) || data.progress is map) &&
+        (!('constraints' in data) || data.constraints is map) &&
+        (!('receptions' in data) || data.receptions is map) &&
+        (!('signature' in data) || data.signature is map) &&
+        (!('clientSubmissionId' in data) || (data.clientSubmissionId is string && data.clientSubmissionId.size() <= 128)) &&
+        (!('potentialDuplicateOf' in data) || (
+          data.potentialDuplicateOf is list &&
+          data.potentialDuplicateOf.size() <= 20 &&
+          (data.potentialDuplicateOf.size() == 0 || data.potentialDuplicateOf[0] is string)
+        )) &&
+        (!('reviews' in data) || (
+          data.reviews is list &&
+          data.reviews.size() <= 50 &&
+          (data.reviews.size() == 0 || data.reviews[0] is map)
+        )) &&
+        (!('versionHistory' in data) || (
+          data.versionHistory is list &&
+          data.versionHistory.size() <= 25 &&
+          (data.versionHistory.size() == 0 || data.versionHistory[0] is map)
+        )) &&
+        (!('submittedAt' in data) || isValidDateString(data.submittedAt)) &&
+        (!('validatedAt' in data) || isValidDateString(data.validatedAt)) &&
+        (!('lastSyncedAt' in data) || isValidDateString(data.lastSyncedAt)) &&
+        data.isDemoData is bool &&
+        isValidDateString(data.createdAt) &&
+        isValidDateString(data.updatedAt);
+    }
+
+    function isValidReview(data) {
+      return data.keys().hasAll(['id', 'reportId', 'reportVersion', 'reviewerId', 'reviewerName', 'decision', 'comment', 'createdAt']) &&
+        data.keys().hasOnly(['id', 'reportId', 'reportVersion', 'reviewerId', 'reviewerName', 'decision', 'comment', 'createdAt']) &&
+        isValidId(data.id) &&
+        isValidId(data.reportId) &&
+        data.reportVersion is number && data.reportVersion >= 1 &&
+        isValidId(data.reviewerId) &&
+        data.reviewerName is string && data.reviewerName.size() >= 2 && data.reviewerName.size() <= 140 &&
+        data.decision in ['EN_COURS_VERIFICATION', 'VALIDE', 'RETOURNE'] &&
+        data.comment is string && data.comment.size() <= 2000 &&
+        (data.decision != 'RETOURNE' || data.comment.size() >= 5) &&
+        isValidDateString(data.createdAt);
+    }
+
+    function isValidGeneratedReport(data) {
+      return data.keys().hasAll([
+          'id', 'title', 'periodicity', 'periodLabel', 'format',
+          'dataScope', 'generatedBy', 'projectCount', 'reportCount', 'isDemoData', 'createdAt'
+        ]) &&
+        data.keys().hasOnly([
+          'id', 'title', 'periodicity', 'periodLabel', 'format',
+          'dataScope', 'generatedBy', 'generatedByName', 'filtersSummary',
+          'projectCount', 'reportCount', 'averageTep', 'averageTef', 'isDemoData', 'createdAt'
+        ]) &&
+        isValidId(data.id) &&
+        data.title is string && data.title.size() >= 2 && data.title.size() <= 220 &&
+        data.periodicity in ['JOURNALIER', 'HEBDOMADAIRE', 'MENSUEL'] &&
+        data.periodLabel is string && data.periodLabel.size() >= 2 && data.periodLabel.size() <= 80 &&
+        data.format in ['EXCEL', 'CSV', 'PDF'] &&
+        data.dataScope in ['VALIDES_UNIQUEMENT', 'SOUMIS_ET_VALIDES'] &&
+        isValidId(data.generatedBy) &&
+        (!('generatedByName' in data) || (data.generatedByName is string && data.generatedByName.size() <= 140)) &&
+        (!('filtersSummary' in data) || (data.filtersSummary is string && data.filtersSummary.size() <= 500)) &&
+        data.projectCount is number && data.projectCount >= 0 &&
+        data.reportCount is number && data.reportCount >= 0 &&
+        (!('averageTep' in data) || isValidPercent(data.averageTep)) &&
+        (!('averageTef' in data) || isValidPercent(data.averageTef)) &&
+        data.isDemoData is bool &&
+        isValidDateString(data.createdAt);
+    }
+
+    function isValidSyncLog(data) {
+      return data.keys().hasAll(['id', 'userId', 'syncedCount', 'failedCount', 'conflictCount', 'summary', 'createdAt']) &&
+        data.keys().hasOnly(['id', 'userId', 'syncedCount', 'failedCount', 'conflictCount', 'summary', 'createdAt']) &&
+        isValidId(data.id) &&
+        isValidId(data.userId) &&
+        data.syncedCount is number && data.syncedCount >= 0 &&
+        data.failedCount is number && data.failedCount >= 0 &&
+        data.conflictCount is number && data.conflictCount >= 0 &&
+        data.summary is string && data.summary.size() <= 500 &&
+        isValidDateString(data.createdAt);
+    }
+
+    function isValidAuditLog(data) {
+      return data.keys().hasAll(['id', 'actorId', 'actorName', 'actorRole', 'action', 'entityType', 'entityId', 'details', 'createdAt']) &&
+        data.keys().hasOnly(['id', 'actorId', 'actorName', 'actorRole', 'action', 'entityType', 'entityId', 'details', 'createdAt']) &&
+        isValidId(data.id) &&
+        isValidId(data.actorId) &&
+        data.actorName is string && data.actorName.size() >= 2 && data.actorName.size() <= 140 &&
+        data.actorRole in ['COORDINATEUR', 'AGENT_TERRAIN'] &&
+        data.action is string && data.action.size() >= 2 && data.action.size() <= 80 &&
+        data.entityType is string && data.entityType.size() >= 2 && data.entityType.size() <= 60 &&
+        isValidId(data.entityId) &&
+        data.details is string && data.details.size() <= 600 &&
+        isValidDateString(data.createdAt);
+    }
+
+    // -------------------------------------------------------------------------
+    // Collection: coordinators (RBAC Anchor)
+    // -------------------------------------------------------------------------
+    match /coordinators/{userId} {
+      allow get: if isVerifiedUser() && isValidId(userId) && (request.auth.uid == userId || isCoordinator());
+      allow list: if isBootstrapCoordinator();
+      allow create: if isVerifiedUser() && isValidId(userId) && isValidCoordinatorRole(incoming()) &&
+        incoming().uid == userId && isCoordinator();
+      allow update: if false;
+      allow delete: if isBootstrapCoordinator() && isValidId(userId);
+    }
+
+    // -------------------------------------------------------------------------
+    // Collection: users (PII isolated to owner or coordinator)
+    // -------------------------------------------------------------------------
+    match /users/{userId} {
+      allow get: if isVerifiedUser() && isValidId(userId) && (request.auth.uid == userId || isCoordinator());
+      allow list: if isBootstrapCoordinator() || (isVerifiedUser() && resource.data.id == request.auth.uid);
+      allow create: if isVerifiedUser() && isValidId(userId) && isValidUserProfile(incoming()) && (
+        isCoordinator() ||
+        (request.auth.uid == userId && incoming().id == userId && incoming().role == 'AGENT_TERRAIN' && incoming().isActive == true)
+      );
+      allow update: if isVerifiedUser() && isValidId(userId) && isValidUserProfile(incoming()) &&
+        incoming().id == existing().id &&
+        incoming().createdAt == existing().createdAt && (
+          isCoordinator() ||
+          (
+            request.auth.uid == userId &&
+            existing().isActive == true &&
+            incoming().role == existing().role &&
+            incoming().isActive == existing().isActive &&
+            incoming().diff(existing()).affectedKeys().hasOnly(['fullName', 'phone', 'functionTitle', 'updatedAt'])
+          )
+        );
+      allow delete: if false;
+    }
+
+    // -------------------------------------------------------------------------
+    // Collection: projects (Official Register - Agents restricted to assigned)
+    // -------------------------------------------------------------------------
+    match /projects/{projectId} {
+      allow get: if isVerifiedUser() && isValidId(projectId) && (
+        isCoordinator() ||
+        request.auth.uid in resource.data.assignedAgentIds
+      );
+      allow list: if isBootstrapCoordinator() ||
+        (isVerifiedUser() && request.auth.uid in resource.data.assignedAgentIds);
+      allow create: if isVerifiedUser() && isValidId(projectId) && isValidProject(incoming()) &&
+        incoming().id == projectId && isCoordinator();
+      allow update: if isVerifiedUser() && isValidId(projectId) && isValidProject(incoming()) &&
+        incoming().id == existing().id &&
+        incoming().createdAt == existing().createdAt &&
+        isCoordinator();
+      allow delete: if false;
+    }
+
+    // -------------------------------------------------------------------------
+    // Collection: agent_assignments (Coordinator managed)
+    // -------------------------------------------------------------------------
+    match /agent_assignments/{assignmentId} {
+      allow get: if isVerifiedUser() && isValidId(assignmentId) && (
+        isCoordinator() ||
+        resource.data.agentId == request.auth.uid
+      );
+      allow list: if isBootstrapCoordinator() ||
+        (isVerifiedUser() && resource.data.agentId == request.auth.uid);
+      allow create: if isVerifiedUser() && isValidId(assignmentId) && isValidAssignment(incoming()) &&
+        incoming().id == assignmentId &&
+        existsAfter(/databases/$(database)/documents/projects/$(incoming().projectId)) &&
+        isCoordinator();
+      allow update: if isVerifiedUser() && isValidId(assignmentId) && isValidAssignment(incoming()) &&
+        incoming().id == existing().id &&
+        incoming().projectId == existing().projectId &&
+        incoming().createdAt == existing().createdAt &&
+        existing().status == 'ACTIVE' &&
+        isCoordinator() &&
+        incoming().diff(existing()).affectedKeys().hasOnly(['status', 'endDate', 'notes', 'reassignedToAgentId', 'updatedAt']);
+      allow delete: if false;
+    }
+
+    // -------------------------------------------------------------------------
+    // Collection: field_reports (5-section terrain reports + Master Gate)
+    // -------------------------------------------------------------------------
+    match /field_reports/{reportId} {
+      allow get: if isVerifiedUser() && isValidId(reportId) && (
+        isCoordinator() ||
+        resource.data.agentId == request.auth.uid
+      );
+      allow list: if isBootstrapCoordinator() ||
+        (isVerifiedUser() && resource.data.agentId == request.auth.uid);
+      allow create: if isVerifiedUser() && isValidId(reportId) && isValidFieldReport(incoming()) &&
+        incoming().id == reportId && (
+          (
+            isCoordinator() &&
+            existsAfter(/databases/$(database)/documents/projects/$(incoming().projectId))
+          ) ||
+          (
+            incoming().agentId == request.auth.uid &&
+            incoming().status in ['BROUILLON', 'EN_ATTENTE_SYNC', 'SOUMIS'] &&
+            !('validatedAt' in incoming()) &&
+            isActiveUser() &&
+            exists(/databases/$(database)/documents/projects/$(incoming().projectId)) &&
+            request.auth.uid in get(/databases/$(database)/documents/projects/$(incoming().projectId)).data.assignedAgentIds
+          )
+        );
+      allow update: if isVerifiedUser() && isValidId(reportId) && isValidFieldReport(incoming()) &&
+        incoming().id == existing().id &&
+        incoming().projectId == existing().projectId &&
+        incoming().agentId == existing().agentId &&
+        incoming().createdAt == existing().createdAt &&
+        existing().status != 'VALIDE' && (
+          // Tier 1: Coordinator review / validation / return action (Terminal State Locked once VALIDE)
+          (
+            isCoordinator() &&
+            incoming().diff(existing()).affectedKeys().hasOnly([
+              'status', 'reviews', 'validatedAt', 'syncStatus', 'syncConflictReason', 'potentialDuplicateOf', 'updatedAt'
+            ])
+          ) ||
+          // Tier 2: Active Agent editing draft or resubmitting returned report (NEVER once SOUMIS / EN_COURS_VERIFICATION / VALIDE)
+          (
+            existing().agentId == request.auth.uid &&
+            isActiveUser() &&
+            existing().status in ['BROUILLON', 'EN_ATTENTE_SYNC', 'RETOURNE'] &&
+            incoming().status in ['BROUILLON', 'EN_ATTENTE_SYNC', 'SOUMIS'] &&
+            !('validatedAt' in incoming()) &&
+            incoming().diff(existing()).affectedKeys().hasOnly([
+              'status', 'syncStatus', 'clientSubmissionId', 'potentialDuplicateOf', 'version', 'periodKey', 'periodicity', 'collectionDate',
+              'currentTep', 'currentTef', 'identification', 'progress', 'constraints',
+              'receptions', 'signature', 'versionHistory', 'submittedAt', 'lastSyncedAt', 'updatedAt'
+            ])
+          )
+        );
+      allow delete: if false;
+
+      // Subcollection: reviews (Master Gate verified against parent report)
+      match /reviews/{reviewId} {
+        allow get: if isVerifiedUser() && isValidId(reportId) && isValidId(reviewId) && (
+          isCoordinator() ||
+          get(/databases/$(database)/documents/field_reports/$(reportId)).data.agentId == request.auth.uid
+        );
+        allow list: if isBootstrapCoordinator();
+        allow create: if isVerifiedUser() && isValidId(reportId) && isValidId(reviewId) &&
+          isValidReview(incoming()) &&
+          incoming().id == reviewId &&
+          incoming().reportId == reportId &&
+          incoming().reviewerId == request.auth.uid &&
+          exists(/databases/$(database)/documents/field_reports/$(reportId)) &&
+          get(/databases/$(database)/documents/field_reports/$(reportId)).data.status != 'VALIDE' &&
+          isCoordinator();
+        allow update, delete: if false;
+      }
+    }
+
+    // -------------------------------------------------------------------------
+    // Collection: generated_reports (Coordinator exclusive)
+    // -------------------------------------------------------------------------
+    match /generated_reports/{generatedReportId} {
+      allow get: if isVerifiedUser() && isValidId(generatedReportId) && isCoordinator();
+      allow list: if isBootstrapCoordinator();
+      allow create: if isVerifiedUser() && isValidId(generatedReportId) &&
+        isValidGeneratedReport(incoming()) &&
+        incoming().id == generatedReportId &&
+        incoming().generatedBy == request.auth.uid &&
+        isCoordinator();
+      allow update, delete: if false;
+    }
+
+    // -------------------------------------------------------------------------
+    // Collection: sync_logs (Agent personal sync logs + Coordinator audit)
+    // -------------------------------------------------------------------------
+    match /sync_logs/{syncLogId} {
+      allow get: if isVerifiedUser() && isValidId(syncLogId) && (
+        isCoordinator() ||
+        resource.data.userId == request.auth.uid
+      );
+      allow list: if isBootstrapCoordinator() ||
+        (isVerifiedUser() && resource.data.userId == request.auth.uid);
+      allow create: if isVerifiedUser() && isValidId(syncLogId) &&
+        isValidSyncLog(incoming()) &&
+        incoming().id == syncLogId &&
+        incoming().userId == request.auth.uid &&
+        (isCoordinator() || isActiveUser());
+      allow update, delete: if false;
+    }
+
+    // -------------------------------------------------------------------------
+    // Collection: audit_logs (Append-only immutable audit trail)
+    // -------------------------------------------------------------------------
+    match /audit_logs/{auditLogId} {
+      allow get: if isVerifiedUser() && isValidId(auditLogId) && isCoordinator();
+      allow list: if isBootstrapCoordinator();
+      allow create: if isVerifiedUser() && isValidId(auditLogId) &&
+        isValidAuditLog(incoming()) &&
+        incoming().id == auditLogId &&
+        incoming().actorId == request.auth.uid &&
+        (isCoordinator() || (incoming().actorRole == 'AGENT_TERRAIN' && isActiveUser()));
+      allow update, delete: if false;
+    }
+
+    // Connection validation probe
+    match /test/connection {
+      allow get: if isSignedIn();
+      allow list, write: if false;
+    }
+  }
+}

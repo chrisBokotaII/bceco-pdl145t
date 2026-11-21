@@ -1,0 +1,247 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Profil opérationnel d'un utilisateur (Coordonnateur ou Agent de Terrain) avec séparation stricte des rôles.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "minLength": 2, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "email": { "type": "string", "format": "email", "maxLength": 180 },
+        "fullName": { "type": "string", "minLength": 2, "maxLength": 140 },
+        "role": { "type": "string", "enum": ["COORDINATEUR", "AGENT_TERRAIN"] },
+        "phone": { "type": "string", "maxLength": 40 },
+        "functionTitle": { "type": "string", "maxLength": 120 },
+        "provinceScope": { "type": "string", "maxLength": 80 },
+        "isActive": { "type": "boolean" },
+        "isDemoData": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "email", "fullName", "role", "isActive", "isDemoData", "createdAt", "updatedAt"]
+    },
+    "CoordinatorRole": {
+      "title": "CoordinatorRole",
+      "description": "Registre d'autorisation serveur identifiant les UID disposant du rôle Coordonnateur.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "minLength": 2, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "email": { "type": "string", "format": "email", "maxLength": 180 },
+        "grantedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email", "grantedAt"]
+    },
+    "Project": {
+      "title": "Project",
+      "description": "Ouvrage officiel du registre Matrice Unique BCECO / PDL-145T (21 colonnes) séparant données contractuelles figées et observations terrain.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "minLength": 2, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "matrixNumber": { "type": "string", "minLength": 1, "maxLength": 40 },
+        "contractor": { "type": "string", "minLength": 1, "maxLength": 180 },
+        "province": { "type": "string", "minLength": 2, "maxLength": 80 },
+        "territory": { "type": "string", "minLength": 2, "maxLength": 80 },
+        "infrastructureType": { "type": "string", "enum": ["ECOLE_PRIMAIRE", "CENTRE_DE_SANTE", "BATIMENT_ADMINISTRATIF"] },
+        "projectName": { "type": "string", "minLength": 2, "maxLength": 220 },
+        "sectorChiefdom": { "type": "string", "maxLength": 120 },
+        "locality": { "type": "string", "maxLength": 120 },
+        "contractStatus": { "type": "string", "enum": ["CONTRAT_ACTIF", "CONTRAT_RESILIE", "REATTRIBUE_ALE_PME"] },
+        "startDate": { "type": "string", "maxLength": 20 },
+        "definitiveReceptionDeadline": { "type": "string", "maxLength": 20 },
+        "baselineDate": { "type": "string", "maxLength": 20 },
+        "baselineStatus": { "type": "string", "enum": ["ACHEVE", "EN_COURS", "A_L_ARRET", "NON_DEMARRE"] },
+        "baselineTep": { "type": "number" },
+        "baselineTef": { "type": "number" },
+        "currentStatus": { "type": "string", "enum": ["ACHEVE", "EN_COURS", "A_L_ARRET", "NON_DEMARRE"] },
+        "latestPeriodRealization": { "type": "string", "maxLength": 2000 },
+        "latestExecutionStages": { "type": "array" },
+        "currentTep": { "type": "number" },
+        "currentTef": { "type": "number" },
+        "currentGap": { "type": "number" },
+        "latestConstraintsSummary": { "type": "string", "maxLength": 2000 },
+        "latestConstraintCategories": { "type": "array" },
+        "hasUnresolvedConstraints": { "type": "boolean" },
+        "hasCriticalConstraint": { "type": "boolean" },
+        "latestImpactsSummary": { "type": "string", "maxLength": 2000 },
+        "latestObservation": { "type": "string", "maxLength": 2000 },
+        "lastValidatedReportId": { "type": "string", "minLength": 2, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "lastValidatedAt": { "type": "string", "format": "date-time" },
+        "assignedAgentIds": { "type": "array" },
+        "isDemoData": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": [
+        "id", "matrixNumber", "contractor", "province", "territory",
+        "infrastructureType", "projectName", "contractStatus", "currentStatus",
+        "currentTep", "currentTef", "assignedAgentIds", "isDemoData", "createdAt", "updatedAt"
+      ]
+    },
+    "AgentAssignment": {
+      "title": "AgentAssignment",
+      "description": "Affectation d'un ouvrage à un agent de terrain avec suivi historique et statut actif ou terminé.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "minLength": 2, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "agentId": { "type": "string", "minLength": 2, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "agentName": { "type": "string", "minLength": 2, "maxLength": 140 },
+        "projectId": { "type": "string", "minLength": 2, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "projectMatrixNumber": { "type": "string", "maxLength": 40 },
+        "projectName": { "type": "string", "maxLength": 220 },
+        "startDate": { "type": "string", "maxLength": 20 },
+        "endDate": { "type": "string", "maxLength": 20 },
+        "status": { "type": "string", "enum": ["ACTIVE", "TERMINEE", "REAFFECTEE"] },
+        "assignedBy": { "type": "string", "minLength": 2, "maxLength": 128 },
+        "assignedByName": { "type": "string", "maxLength": 140 },
+        "notes": { "type": "string", "maxLength": 500 },
+        "reassignedToAgentId": { "type": "string", "minLength": 2, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "isDemoData": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "agentId", "agentName", "projectId", "startDate", "status", "assignedBy", "isDemoData", "createdAt", "updatedAt"]
+    },
+    "FieldReport": {
+      "title": "FieldReport",
+      "description": "Fiche de collecte de données terrain en 5 sections avec cycle de validation, historique des versions et pièces jointes.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "minLength": 2, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "projectId": { "type": "string", "minLength": 2, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "matrixNumber": { "type": "string", "minLength": 1, "maxLength": 40 },
+        "agentId": { "type": "string", "minLength": 2, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "agentName": { "type": "string", "minLength": 2, "maxLength": 140 },
+        "assignmentId": { "type": "string", "minLength": 2, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "status": { "type": "string", "enum": ["BROUILLON", "EN_ATTENTE_SYNC", "SOUMIS", "EN_COURS_VERIFICATION", "VALIDE", "RETOURNE"] },
+        "syncStatus": { "type": "string", "enum": ["LOCAL_BROUILLON", "EN_ATTENTE_SYNC", "SYNCHRONISE", "CONFLIT_AFFECTATION", "ERREUR_SYNC"] },
+        "syncConflictReason": { "type": "string", "maxLength": 600 },
+        "clientSubmissionId": { "type": "string", "maxLength": 128 },
+        "version": { "type": "number" },
+        "periodKey": { "type": "string", "minLength": 4, "maxLength": 40 },
+        "periodicity": { "type": "string", "enum": ["JOURNALIER", "HEBDOMADAIRE", "MENSUEL"] },
+        "collectionDate": { "type": "string", "maxLength": 20 },
+        "currentTep": { "type": "number" },
+        "currentTef": { "type": "number" },
+        "submittedAt": { "type": "string", "format": "date-time" },
+        "validatedAt": { "type": "string", "format": "date-time" },
+        "lastSyncedAt": { "type": "string", "format": "date-time" },
+        "isDemoData": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": [
+        "id", "projectId", "matrixNumber", "agentId", "agentName",
+        "status", "syncStatus", "version", "periodKey", "periodicity",
+        "collectionDate", "currentTep", "currentTef", "isDemoData", "createdAt", "updatedAt"
+      ]
+    },
+    "ReportReview": {
+      "title": "ReportReview",
+      "description": "Décision de revue, validation ou retour pour correction émise par le Coordonnateur sur une fiche terrain.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "minLength": 2, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "reportId": { "type": "string", "minLength": 2, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "reportVersion": { "type": "number" },
+        "reviewerId": { "type": "string", "minLength": 2, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "reviewerName": { "type": "string", "minLength": 2, "maxLength": 140 },
+        "decision": { "type": "string", "enum": ["EN_COURS_VERIFICATION", "VALIDE", "RETOURNE"] },
+        "comment": { "type": "string", "maxLength": 2000 },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "reportId", "reportVersion", "reviewerId", "reviewerName", "decision", "comment", "createdAt"]
+    },
+    "GeneratedReport": {
+      "title": "GeneratedReport",
+      "description": "Archive historique des rapports consolidés officiels générés par le Coordonnateur (Excel, CSV, PDF).",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "minLength": 2, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "title": { "type": "string", "minLength": 2, "maxLength": 220 },
+        "periodicity": { "type": "string", "enum": ["JOURNALIER", "HEBDOMADAIRE", "MENSUEL"] },
+        "periodLabel": { "type": "string", "maxLength": 80 },
+        "format": { "type": "string", "enum": ["EXCEL", "CSV", "PDF"] },
+        "dataScope": { "type": "string", "enum": ["VALIDES_UNIQUEMENT", "SOUMIS_ET_VALIDES"] },
+        "filtersSummary": { "type": "string", "maxLength": 500 },
+        "generatedBy": { "type": "string", "minLength": 2, "maxLength": 128 },
+        "generatedByName": { "type": "string", "maxLength": 140 },
+        "projectCount": { "type": "number" },
+        "reportCount": { "type": "number" },
+        "averageTep": { "type": "number" },
+        "averageTef": { "type": "number" },
+        "isDemoData": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "title", "periodicity", "periodLabel", "format", "dataScope", "generatedBy", "projectCount", "reportCount", "isDemoData", "createdAt"]
+    },
+    "SyncLog": {
+      "title": "SyncLog",
+      "description": "Journal de synchronisation hors ligne d'un agent de terrain.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "minLength": 2, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "userId": { "type": "string", "minLength": 2, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "syncedCount": { "type": "number" },
+        "failedCount": { "type": "number" },
+        "conflictCount": { "type": "number" },
+        "summary": { "type": "string", "maxLength": 500 },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "userId", "syncedCount", "failedCount", "conflictCount", "summary", "createdAt"]
+    },
+    "AuditLog": {
+      "title": "AuditLog",
+      "description": "Piste d'audit immuable des opérations critiques du programme BCECO / PDL-145T.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "minLength": 2, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "actorId": { "type": "string", "minLength": 2, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "actorName": { "type": "string", "maxLength": 140 },
+        "actorRole": { "type": "string", "enum": ["COORDINATEUR", "AGENT_TERRAIN"] },
+        "action": { "type": "string", "maxLength": 80 },
+        "entityType": { "type": "string", "maxLength": 60 },
+        "entityId": { "type": "string", "maxLength": 128 },
+        "details": { "type": "string", "maxLength": 600 },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "actorId", "actorName", "actorRole", "action", "entityType", "entityId", "details", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "Profils utilisateurs (Coordonnateur et Agents de Terrain). Accès lecture/écriture restreint au propriétaire ou au Coordonnateur."
+    },
+    "/coordinators/{userId}": {
+      "schema": { "$ref": "#/entities/CoordinatorRole" },
+      "description": "Table de contrôle d'accès serveur des Coordonnateurs autorisés."
+    },
+    "/projects/{projectId}": {
+      "schema": { "$ref": "#/entities/Project" },
+      "description": "Registre officiel des ouvrages (Matrice Unique BCECO / PDL-145T). Les agents ne peuvent lire que les ouvrages qui leur sont activement affectés."
+    },
+    "/agent_assignments/{assignmentId}": {
+      "schema": { "$ref": "#/entities/AgentAssignment" },
+      "description": "Affectations d'ouvrages aux agents de terrain gérées exclusivement par le Coordonnateur."
+    },
+    "/field_reports/{reportId}": {
+      "schema": { "$ref": "#/entities/FieldReport" },
+      "description": "Fiches de collecte terrain en 5 sections soumises par les agents et validées par le Coordonnateur."
+    },
+    "/field_reports/{reportId}/reviews/{reviewId}": {
+      "schema": { "$ref": "#/entities/ReportReview" },
+      "description": "Historique immuable des revues et décisions de validation du Coordonnateur sur une fiche terrain."
+    },
+    "/generated_reports/{generatedReportId}": {
+      "schema": { "$ref": "#/entities/GeneratedReport" },
+      "description": "Rapports consolidés générés exclusivement par le Coordonnateur."
+    },
+    "/sync_logs/{syncLogId}": {
+      "schema": { "$ref": "#/entities/SyncLog" },
+      "description": "Journaux de synchronisation hors ligne propres à chaque agent."
+    },
+    "/audit_logs/{auditLogId}": {
+      "schema": { "$ref": "#/entities/AuditLog" },
+      "description": "Piste d'audit immuable (append-only) consultable uniquement par le Coordonnateur."
+    }
+  }
+}

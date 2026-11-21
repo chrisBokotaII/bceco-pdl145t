@@ -1,0 +1,365 @@
+@import "tailwindcss";
+@import "./styles/theme-tokens.css";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Expose tokens as Tailwind color utilities: bg-app-page, text-app-primary, … */
+@theme {
+  --color-app-page: var(--surface-page);
+  --color-app-card: var(--surface-card);
+  --color-app-muted: var(--surface-muted);
+  --color-app-elevated: var(--surface-elevated);
+  --color-app-sidebar: var(--surface-sidebar);
+  --color-app-nav: var(--surface-nav);
+  --color-app-input: var(--surface-input);
+  --color-app-primary: var(--text-primary);
+  --color-app-secondary: var(--text-secondary);
+  --color-app-muted-fg: var(--text-muted);
+  --color-app-inverse: var(--text-inverse);
+  --color-app-border: var(--border-subtle);
+  --color-app-border-strong: var(--border-strong);
+  --color-app-brand: var(--brand-navy);
+  --color-app-accent: var(--brand-primary);
+  --color-app-success: var(--status-success);
+  --color-app-warning: var(--status-warning);
+  --color-app-error: var(--status-error);
+  --color-app-info: var(--status-info);
+}
+
+@layer base {
+  :root {
+    --font-display: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    --font-sans: 'Public Sans', system-ui, -apple-system, sans-serif;
+    --font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, monospace;
+    --navy-950: #09172b;
+    --navy-900: #0f2544;
+    --navy-800: #16325b;
+    --inst-blue: #1d4ed8;
+  }
+
+  html {
+    font-family: var(--font-sans);
+    color: var(--text-primary);
+    background-color: var(--surface-page);
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--surface-page);
+    color: var(--text-primary);
+  }
+
+  h1, h2, h3, h4, .font-display {
+    font-family: var(--font-display);
+  }
+
+  .font-mono, .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
+
+  .font-mono {
+    font-family: var(--font-mono);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--border-focus);
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background: rgb(29 78 216 / 0.25);
+  }
+
+  html.dark ::selection {
+    background: rgb(59 130 246 / 0.35);
+  }
+}
+
+/* Subtle theme transitions — skipped when user prefers reduced motion */
+@media (prefers-reduced-motion: no-preference) {
+  html.theme-ready body,
+  html.theme-ready body *:not(svg):not(path):not(canvas):not(img):not(video):not(iframe) {
+    transition: var(--theme-transition);
+  }
+}
+
+/*
+ * Legacy utility remaps (unlayered so they beat Tailwind @layer utilities).
+ * Maps existing bg-white / slate / tint classes onto design tokens in dark mode
+ * without rewriting every screen. Light mode keeps native Tailwind colors.
+ */
+html.dark {
+  background-color: var(--surface-page);
+  color: var(--text-primary);
+}
+
+html.dark .bg-slate-50 {
+  background-color: var(--surface-page) !important;
+}
+html.dark .bg-slate-100 {
+  background-color: var(--surface-muted) !important;
+}
+html.dark .bg-slate-50\/40 {
+  background-color: rgb(26 36 54 / 0.55) !important;
+}
+html.dark .bg-white {
+  background-color: var(--surface-card) !important;
+}
+html.dark .bg-white\/95 {
+  background-color: rgb(21 30 46 / 0.95) !important;
+}
+html.dark .hover\:bg-white:hover {
+  background-color: var(--surface-elevated) !important;
+}
+html.dark .hover\:bg-slate-50:hover,
+html.dark .hover\:bg-slate-100:hover {
+  background-color: var(--surface-muted) !important;
+}
+html.dark .hover\:bg-blue-50\/40:hover {
+  background-color: var(--brand-primary-soft) !important;
+}
+
+html.dark .border-slate-100,
+html.dark .border-slate-200 {
+  border-color: var(--border-subtle) !important;
+}
+html.dark .border-slate-300 {
+  border-color: var(--border-strong) !important;
+}
+html.dark .divide-slate-100 > :not([hidden]) ~ :not([hidden]),
+html.dark .divide-slate-200 > :not([hidden]) ~ :not([hidden]) {
+  border-color: var(--border-subtle) !important;
+}
+
+html.dark .text-slate-900 {
+  color: var(--text-primary) !important;
+}
+html.dark .text-slate-800 {
+  color: #e2e8f0 !important;
+}
+html.dark .text-slate-700 {
+  color: #cbd5e1 !important;
+}
+html.dark .text-slate-600 {
+  color: var(--text-secondary) !important;
+}
+html.dark .placeholder\:text-slate-400::placeholder {
+  color: var(--text-muted) !important;
+}
+
+/* Brand navy as text on cards → accent blue in dark */
+html.dark .text-\[\#0F2544\] {
+  color: var(--brand-primary) !important;
+}
+html.dark .border-\[\#0F2544\] {
+  border-color: var(--brand-primary) !important;
+}
+html.dark .bg-\[\#0F2544\] {
+  background-color: var(--brand-navy) !important;
+}
+html.dark .hover\:bg-\[\#16325B\]:hover {
+  background-color: var(--brand-navy-hover) !important;
+}
+
+/* Status tint panels */
+html.dark .bg-amber-50,
+html.dark .bg-amber-50\/50,
+html.dark .bg-amber-50\/80,
+html.dark .bg-amber-100 {
+  background-color: var(--status-warning-bg) !important;
+}
+html.dark .border-amber-200,
+html.dark .border-amber-300 {
+  border-color: var(--status-warning-border) !important;
+}
+html.dark .text-amber-950,
+html.dark .text-amber-900,
+html.dark .text-amber-800 {
+  color: var(--status-warning) !important;
+}
+html.dark .text-amber-700,
+html.dark .text-amber-600 {
+  color: #fcd34d !important;
+}
+
+html.dark .bg-blue-50,
+html.dark .bg-blue-50\/50,
+html.dark .bg-blue-50\/70,
+html.dark .bg-blue-50\/80 {
+  background-color: var(--status-info-bg) !important;
+}
+html.dark .border-blue-200,
+html.dark .border-blue-300 {
+  border-color: var(--status-info-border) !important;
+}
+html.dark .text-blue-950,
+html.dark .text-blue-900,
+html.dark .text-blue-800 {
+  color: #bfdbfe !important;
+}
+html.dark .text-blue-700 {
+  color: var(--status-info) !important;
+}
+html.dark .hover\:bg-blue-50:hover,
+html.dark .hover\:bg-blue-100:hover {
+  background-color: rgb(59 130 246 / 0.28) !important;
+}
+
+html.dark .bg-emerald-50,
+html.dark .bg-emerald-50\/30,
+html.dark .bg-emerald-50\/40,
+html.dark .bg-emerald-50\/50,
+html.dark .bg-emerald-50\/70,
+html.dark .bg-emerald-50\/80 {
+  background-color: var(--status-success-bg) !important;
+}
+html.dark .border-emerald-200,
+html.dark .border-emerald-300 {
+  border-color: var(--status-success-border) !important;
+}
+html.dark .text-emerald-950,
+html.dark .text-emerald-900,
+html.dark .text-emerald-800 {
+  color: #a7f3d0 !important;
+}
+html.dark .text-emerald-700 {
+  color: var(--status-success) !important;
+}
+html.dark .hover\:bg-emerald-50:hover,
+html.dark .hover\:bg-emerald-100\/70:hover {
+  background-color: rgb(6 78 59 / 0.5) !important;
+}
+
+html.dark .bg-red-50,
+html.dark .bg-red-50\/40,
+html.dark .bg-red-50\/60,
+html.dark .bg-red-50\/80 {
+  background-color: var(--status-error-bg) !important;
+}
+html.dark .border-red-200,
+html.dark .border-red-300 {
+  border-color: var(--status-error-border) !important;
+}
+html.dark .text-red-950,
+html.dark .text-red-900,
+html.dark .text-red-800,
+html.dark .text-red-700 {
+  color: var(--status-error) !important;
+}
+html.dark .text-red-600 {
+  color: #f87171 !important;
+}
+html.dark .hover\:bg-red-50:hover {
+  background-color: rgb(127 29 29 / 0.45) !important;
+}
+
+html.dark input:not([type='checkbox']):not([type='radio']),
+html.dark select,
+html.dark textarea {
+  background-color: var(--surface-input) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-strong) !important;
+}
+html.dark input:not([type='checkbox']):not([type='radio']):focus,
+html.dark select:focus,
+html.dark textarea:focus {
+  border-color: var(--border-focus) !important;
+}
+html.dark input:-webkit-autofill,
+html.dark input:-webkit-autofill:hover,
+html.dark input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--text-primary);
+  box-shadow: 0 0 0 1000px var(--surface-input) inset;
+  transition: background-color 99999s ease-out 0s;
+}
+html.dark .accent-\[\#0F2544\] {
+  accent-color: var(--brand-primary);
+}
+
+html.dark .shadow-xl {
+  box-shadow:
+    0 20px 25px -5px rgb(0 0 0 / 0.5),
+    0 8px 10px -6px rgb(0 0 0 / 0.45) !important;
+}
+html.dark .shadow-sm {
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.4) !important;
+}
+
+html.dark .leaflet-container {
+  background: var(--surface-muted);
+}
+html.dark .leaflet-control-attribution {
+  background: rgb(16 24 39 / 0.9) !important;
+  color: var(--text-secondary) !important;
+}
+
+.pb-safe {
+  padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+}
+
+/* Subtle interactive lift for KPI / project cards */
+@media (prefers-reduced-motion: no-preference) {
+  .interactive-lift {
+    transition: transform 180ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 180ms ease,
+      border-color 160ms ease;
+  }
+  .interactive-lift:hover {
+    box-shadow: 0 8px 20px -12px rgb(15 37 68 / 0.28);
+  }
+  html.dark .interactive-lift:hover {
+    box-shadow: 0 10px 24px -12px rgb(0 0 0 / 0.55);
+  }
+}
+
+.leaflet-container {
+  width: 100%;
+  z-index: 0;
+  font: inherit;
+  background: #e2e8f0;
+  min-height: 16rem;
+}
+
+.leaflet-container img.leaflet-tile,
+.leaflet-container .leaflet-tile,
+.leaflet-tile-pane img,
+.leaflet-marker-icon,
+.leaflet-marker-shadow {
+  max-width: none !important;
+  max-height: none !important;
+  width: auto !important;
+  height: auto !important;
+}
+
+.leaflet-div-icon.leaflet-agent-marker-clean,
+.leaflet-div-icon.leaflet-project-ref-clean {
+  background: transparent !important;
+  border: none !important;
+}
+
+.leaflet-control-attribution {
+  font-size: 10px !important;
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  html.dark,
+  html.dark body {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    color-scheme: light !important;
+  }
+  body {
+    background: #ffffff !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
